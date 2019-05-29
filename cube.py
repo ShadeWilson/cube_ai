@@ -49,6 +49,59 @@ class Cubie:
         
         return new_cubie
 
+    def rotate(self, dir, clockwise=True):
+        """Most complicated method here. Based in the linear
+        algebra of 3D rotational matrices. I am forcing rotations
+        to 90 degrees, which simplifies the matrices a lot, allowing
+        me to "collapse" them and instead of performing matrix algebra,
+        I can simply swap x, y, and/or z value as needed.
+        
+        - dir: direction, in cube lingo. Accepted directions are
+        B, F, L, R, U, and D. Each stand for rotating a particular face
+        90 degrees. This translates to rotation along a particular axis 
+        depending on the direction. Ex: F (front) represents a rotation of
+        the XY plane about the Z axis. NOTE: this assumes that the user knows
+        what they are doing when rotating and does not rotate a cube on the back face
+        when the front is rotated...
+
+        - clockwise: True for a clockwise rotation, False for a counterclockwise rotation
+
+        Returns a new cubie rotated from this.
+        """
+        new = self.copy()
+        if dir in ["B", "F"]:  # about Z
+            if clockwise:
+                new.y = -self.z
+                new.z = self.y
+            else:
+                new.y = self.z
+                new.z = -self.y
+            new.UD_color = self.LR_color
+            new.LR_color = self.UD_color
+        elif dir in ["L", "R"]:  # about X
+            if clockwise:
+                new.x = self.z
+                new.z = -self.x
+            else:
+                new.x = -self.z
+                new.z = self.x
+            new.FB_color = self.UD_color
+            new.UD_color = self.FB_color
+        elif dir in ["U", "D"]:  # about Y
+            if clockwise:
+                new.x = self.y
+                new.y = -self.x
+            else:
+                new.x = -self.y
+                new.y = self.x
+            new.FB_color = self.LR_color
+            new.LR_color = self.FB_color
+        else:
+            raise ValueError("{} is not a valid rotation axis.".format(rotation_axis))
+
+        return new
+
+
 
 
 class Cube:
@@ -203,11 +256,13 @@ if __name__ == "__main__":
     c1 = Cube(n=2, c=6)
     print(c1)
 
-    cubie = Cubie(0, 0, 0, "1", "2", "3")
+    cubie = Cubie(-1, -1, -1, "R", "W", "B")
     print(cubie)
 
-    cubie2 = cubie.copy()
+    cubie2 = cubie.rotate(dir="U")
     print(cubie2 == cubie)
+    print(cubie2)
 
-    cubie2.x = 5
-    print(cubie2 == cubie)
+    cubie3 = cubie2.rotate(dir="U", clockwise=False)
+    print(cubie3 == cubie)
+    print(cubie3)
