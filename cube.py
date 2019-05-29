@@ -14,16 +14,26 @@ class Cube:
         c is the number of colors, defaulting to 6.
 
         """
-        cube_sides = 6
         self.n = n
         self.c = c
         self.cube = []
-        for side in range(cube_sides):
-            self.cube.append([x[:] for x in [[side] * n] * n])
+        for side in range(6):
+            color = side % c
+            self.cube.append([x[:] for x in [[color] * n] * n])
     
 
-    def __eq__(self,s2):
-        pass
+    def __eq__(self, s2):
+        if self.n != s2.n:
+            return False
+        elif self.c != s2.c:
+            return False
+        else:
+            for side in range(6):
+                for i in range(self.n):
+                    for j in range(self.n): 
+                        if self.cube[side][i][j] != s2.cube[side][i][j]:
+                            return False
+        return True
 
     def __str__(self):
         # Produces a textual description of a state.
@@ -64,14 +74,15 @@ class Cube:
         # for use by operators in creating new states.
         pass
 
-    def can_move(self,dir):
+    def can_move(self, dir):
         '''Tests whether it's legal to move a tile that is next
            to the void in the direction given.'''
         raise True
 
-    def move(self,dir):
+    def move(self, dir):
         pass
 
 
-c = Cube(2)
-print(c)
+if __name__ == "__main__":
+    c1 = Cube(n=2, c=6)
+    print(c1)
