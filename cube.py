@@ -101,11 +101,23 @@ class Cubie:
 
         return new
 
+    def is_outside_cube(self, coordinate_range):
+        """ Given a range of Cube coordinates, 
+        returns true iff the cubie itself is on the outside of the cube.
+        Ie, the cubie would be visible (and thus matters)
+
+        """
+        max_coord = max(coordinate_range)
+        min_coord = min(coordinate_range)
+        edges = [min_coord, max_coord]
+
+        return self.x in edges or self.y in edges or self.z in edges
+
 
 
 
 class Cube:
-    def __init__(self, n=3, c=6):
+    def __init__(self, n=2, c=6):
         """n is the dimention of the NxN Rubiks cube.
         c is the number of colors, defaulting to 6.
 
@@ -115,9 +127,55 @@ class Cube:
         self.cube = []
         self.color_dict = {0: "W", 1: "B", 2: "R", 3: "G", 4: "O", 5: "Y"}
 
-        for side in range(6):
-            color = side % c
-            self.cube.append([x[:] for x in [[self._to_color(color)] * n] * n])
+        # max coordinate is the farthest distance from the origin
+        # a cubie may be found. Coordinates are 1 unit away from each other,
+        # down to the min coordinate (-max coordinate). SYMMETRICAL
+        self.max_coord = 0.0
+        for i in range(n):
+            self.max_coord += i
+        self.max_coord = self.max_coord / n
+
+        self.coordinate_range = [-self.max_coord]
+        for i in range(n - 1):
+            self.coordinate_range.append(-self.max_coord + 1 + i)
+
+        for x in self.coordinate_range:
+            for y in self.coordinate_range:
+                for z in self.coordinate_range:
+                    FB_color, UD_color, LR_color = self._side_color(x, y, z)
+                    cubie = Cubie(x, y, z, FB_color, UD_color, LR_color)
+                    self.cube.append(cubie)
+
+    def _side_color(self, x, y, z):
+        """Given an x, y, and z coord,
+        return a tuple of 
+        (FB_color, UD_color, LR_color). 
+        One or more may be None if the cubie is not
+        visible from that direction."""
+        FB_color = None
+        UD_color = None
+        LR_color = None
+
+        max_coord = max(self.coordinate_range)
+        min_coord = min(self.coordinate_range)
+
+        if x == min_coord:
+            LR_color = "B"
+        elif x == max_coord:
+            LR_color = "G"
+
+        if y == min_coord:
+            UD_color = "Y"
+        elif y == max_coord:
+            UD_color = "W"
+
+        if z == min_coord:
+            FB_color = "R"
+        elif z == max_coord:
+            FB_color = "O"
+
+        return (FB_color, UD_color, LR_color) 
+
 
     def _to_color(self, color_num):
         """Converts the color number (0 - 5)
@@ -126,55 +184,12 @@ class Cube:
         return self.color_dict[color_num]
 
     def __eq__(self, s2):
-        if self.n != s2.n:
-            return False
-        elif self.c != s2.c:
-            return False
-        else:
-            for side in range(6):
-                for i in range(self.n):
-                    for j in range(self.n): 
-                        if self.cube[side][i][j] != s2.cube[side][i][j]:
-                            return False
         return True
 
     def __str__(self):
         # Produces a textual description of a state.
         # Might not be needed in normal operation with GUIs.
-        res = ""
-
-        # build out UPPER (U)
-        buf = " " * (5 + self.n)
-        upper = 0
-        for r in range(self.n):
-            res += buf + "U ["
-            for cubie in self.cube[upper][r]:
-                res += cubie
-            res += "]\n"
-        res += "\n"
-
-        # 2D cube as "t" is long in horizontal direction
-        sides = ["L", "F", "R", "B"]
-        for r in range(self.n):
-            for s in range(len(sides)):
-                side = sides[s]
-                res += side + " ["
-                for cubie in self.cube[s + 1][r]:
-                    res += cubie
-                res += "] "
-            res += "\n"
-        res += "\n"
-
-        # handle DOWN (D)
-        down = 5
-        for r in range(self.n):
-            res += buf + "D ["
-            for cubie in self.cube[down][r]:
-                res += cubie
-            res += "]\n"
-
-
-        return res
+        return ""
 
     def __hash__(self):
         return (self.__str__()).__hash__()
@@ -182,36 +197,15 @@ class Cube:
     def copy(self):
         # Performs an appropriately deep copy of a state,
         # for use by operators in creating new states.
-        new_cube = Cube(n=self.n, c=self.c)
-        for side in range(6):
-            for i in range(self.n):
-                for j in range(self.n): 
-                    new_cube.cube[side][i][j] = self.cube[side][i][j]
-        
-        return new_cube
+        pass
 
     def can_move(self, dir):
         '''Tests whether it's legal to move a tile that is next
            to the void in the direction given.'''
-        raise True
+        return True
 
     def move(self, dir):
-        """ It is very unfortunate i have to do it like this
-
-        # rotate front clock-wise
-        if dir == "U":
-            a = self.cube[1][0]
-            self.cube[1][0] = self.cube[2][0]
-
-            b = self.cube[4][0]
-            self.cube[4][0] = a
-
-            a = self.cube[3][0]
-            self.cube[3][0] = b
-
-            row = self.cube[1][0]
-            #self.cube[1][0] = self.cube[2][0]
-            """
+        pass
 
 """ GLOBAL FUNCTIONS """
 
@@ -254,7 +248,7 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 
 if __name__ == "__main__":
     c1 = Cube(n=2, c=6)
-    print(c1)
+    print("Max coord: {}\nRange: {}".format(c1.max_coord, c1.coordinate_range))
 
     cubie = Cubie(-1, -1, -1, "R", "W", "B")
     print(cubie)
