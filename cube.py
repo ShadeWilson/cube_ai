@@ -336,11 +336,17 @@ class Operator:
   def apply(self, s):
     return self.state_transf(s)
 
-directions = ['N','E','W','S']
-OPERATORS = [Operator("Move a tile "+str(dir)+" into the void",
+directions = ["F", "B", "U", "D", "L", "R"]
+clockwise_opts = [True, False]
+opts = []
+for dir in directions:
+    for opt in clockwise_opts:
+        opts.append((dir, opt))
+
+OPERATORS = [Operator("Rotate " + str(dir) + " (clockwise=" + str(opt) + ")",
                       lambda s,dir1=dir: s.can_move(dir1),
-                      lambda s,dir1=dir: s.move(dir1) )
-             for dir in directions]
+                      lambda s,dir1=dir, opt1=opt: s.move(dir1, opt1) )
+             for dir, opt in opts]
 
 
 #<GOAL_TEST> (optional)
@@ -364,7 +370,7 @@ if __name__ == "__main__":
 
     c3 = c2.move(dir="F")
     #print("Copy test 2: {}".format(c2 == c3))
-    """
+    
 
     print("***************")
     cube = Cube(n=2)
@@ -395,7 +401,7 @@ if __name__ == "__main__":
     d_180 = d_180.move(dir="D")
     print("U180 == D180: {}".format(u_180 == d_180))
 
-    """
+    
     c2.cube[0] = Cubie(-1, 0, -1, "R", "W", "B")
     print("After change: {}".format(c1 == c2))
 
@@ -409,8 +415,13 @@ if __name__ == "__main__":
     cubie3 = cubie2.rotate(dir="U", clockwise=False)
     print(cubie3 == cubie)
     print(cubie3)
+    """
     
     cube = Cube(n=2)
     print(cube)
-    """
+
+    for op in OPERATORS:
+        print(op.name)
+        new_state = op.state_transf(cube)
+        print(new_state)
 
