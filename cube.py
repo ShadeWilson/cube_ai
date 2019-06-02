@@ -35,6 +35,18 @@ class Cubie:
         return self.x == s2.x and self.y == s2.y and self.z == s2.z and \
             self.FB_color == s2.FB_color and self.UD_color == s2.UD_color and self.LR_color == s2.LR_color
 
+    def __lt__(self, s2):
+        if self.x < s2.x: return True
+        elif self.y < s2.y: return True
+        elif self.z < s2.z: return True
+        else: return False
+
+    def __le__(self, s2):
+        if self.x <= s2.x: return True
+        elif self.y <= s2.y: return True
+        elif self.z <= s2.z: return True
+        else: return False
+
     def __str__(self):
         return "{}, {}, {} [{} {} {}]".format(
             self.FB_color, self.UD_color, self.LR_color,
@@ -116,16 +128,22 @@ class Cubie:
 
 
 
+
 class Cube:
-    def __init__(self, n=2, c=6):
+    def __init__(self, n=2):
         """n is the dimention of the NxN Rubiks cube.
         c is the number of colors, defaulting to 6.
 
         """
         self.n = n
-        self.c = c
         self.cube = []
-        self.color_dict = {0: "W", 1: "B", 2: "R", 3: "G", 4: "O", 5: "Y"}
+        self.front = []
+        self.back = []
+        self.up = []
+        self.down = []
+        self.left = []
+        self.right = []
+        #self.color_dict = {0: "W", 1: "B", 2: "R", 3: "G", 4: "O", 5: "Y"}
 
         # max coordinate is the farthest distance from the origin
         # a cubie may be found. Coordinates are 1 unit away from each other,
@@ -139,12 +157,15 @@ class Cube:
         for i in range(n - 1):
             self.coordinate_range.append(-self.max_coord + 1 + i)
 
+        # populate Cube w/ cubies and faces with relevent cubies
         for x in self.coordinate_range:
             for y in self.coordinate_range:
                 for z in self.coordinate_range:
                     FB_color, UD_color, LR_color = self._side_color(x, y, z)
                     cubie = Cubie(x, y, z, FB_color, UD_color, LR_color)
-                    self.cube.append(cubie)
+                    if cubie.is_outside_cube(self.coordinate_range):
+                        self._add_to_face(cubie)
+                        self.cube.append(cubie)
 
     def _side_color(self, x, y, z):
         """Given an x, y, and z coord,
@@ -176,6 +197,25 @@ class Cube:
 
         return (FB_color, UD_color, LR_color) 
 
+    def _add_to_face(self, cubie):
+        """Add cubie to the proper faces."""
+        max_coord = max(self.coordinate_range)
+        min_coord = min(self.coordinate_range)
+
+        if cubie.x == min_coord:
+            self.left.append(cubie)
+        elif cubie.x == max_coord:
+            self.right.append(cubie)
+
+        if cubie.y == min_coord:
+            self.down.append(cubie)
+        elif cubie.y == max_coord:
+            self.up.append(cubie)
+
+        if cubie.z == min_coord:
+            self.front.append(cubie)
+        elif cubie.z == max_coord:
+            self.back.append(cubie)
 
     def _to_color(self, color_num):
         """Converts the color number (0 - 5)
@@ -184,12 +224,39 @@ class Cube:
         return self.color_dict[color_num]
 
     def __eq__(self, s2):
+        if self.n != s2.n:
+            return False
+
+        self.cube.sort()
+        s2.cube.sort()
+
+        for i in range(len(self.cube)):
+            if self.cube[i] != s2.cube[i]:
+                return False
         return True
 
     def __str__(self):
-        # Produces a textual description of a state.
-        # Might not be needed in normal operation with GUIs.
-        return ""
+        res = "Front:\n"
+
+        for c in self.front:
+            res += str(c) + "\n"
+        res +="Back:\n"
+        for c in self.back:
+            res += str(c) + "\n"
+        res +="Up:\n"
+        for c in self.up:
+            res += str(c) + "\n"
+        res +="Down:\n"
+        for c in self.down:
+            res += str(c) + "\n"
+        res +="Left:\n"
+        for c in self.left:
+            res += str(c) + "\n"
+        res +="Right:\n"
+        for c in self.right:
+            res += str(c) + "\n"
+
+        return res
 
     def __hash__(self):
         return (self.__str__()).__hash__()
@@ -197,7 +264,21 @@ class Cube:
     def copy(self):
         # Performs an appropriately deep copy of a state,
         # for use by operators in creating new states.
-        pass
+        new = Cube(self.n)
+
+        new.cube = []
+        new.front = []
+        new.back = []
+        new.up = []
+        new.down = []
+        new.left = []
+        new.right = []
+
+        for cubie in self.cube:
+            new._add_to_face(cubie)
+            new.cube.append(cubie)
+
+        return new
 
     def can_move(self, dir):
         '''Tests whether it's legal to move a tile that is next
@@ -210,7 +291,7 @@ class Cube:
 """ GLOBAL FUNCTIONS """
 
 def goal_test(s):
-    goal = Cube(n=s.n, c=s.n)
+    goal = Cube(n=s.n)
     return s == goal
 
 def goal_message(s):
@@ -247,8 +328,15 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 
 
 if __name__ == "__main__":
-    c1 = Cube(n=2, c=6)
+    c1 = Cube(n=3)
     print("Max coord: {}\nRange: {}".format(c1.max_coord, c1.coordinate_range))
+    print(c1)
+
+    c2 = c1.copy()
+    print(c1 == c2)
+    c2.cube[0] = Cubie(-1, 0, -1, "R", "W", "B")
+    print("After change: {}".format(c1 == c2))
+    print("{} < {} = {}".format(c1.cube[0], c2.cube[0], c1.cube[0] == c2.cube[0]))
 
     cubie = Cubie(-1, -1, -1, "R", "W", "B")
     print(cubie)
