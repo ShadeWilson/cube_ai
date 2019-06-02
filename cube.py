@@ -81,33 +81,33 @@ class Cubie:
         Returns a new cubie rotated from this.
         """
         new = self.copy()
-        if dir in ["B", "F"]:  # about Z
+        if dir in ["L", "R"]:  # about X
             if clockwise:
                 new.y = -self.z
                 new.z = self.y
             else:
                 new.y = self.z
                 new.z = -self.y
-            new.UD_color = self.LR_color
-            new.LR_color = self.UD_color
-        elif dir in ["L", "R"]:  # about X
+            new.UD_color = self.FB_color
+            new.FB_color = self.UD_color
+        elif dir in ["U", "D"]:  # about Y
             if clockwise:
                 new.x = self.z
                 new.z = -self.x
             else:
                 new.x = -self.z
                 new.z = self.x
-            new.FB_color = self.UD_color
-            new.UD_color = self.FB_color
-        elif dir in ["U", "D"]:  # about Y
+            new.FB_color = self.LR_color
+            new.LR_color = self.FB_color
+        elif dir in ["F", "B"]:  # about Z
             if clockwise:
                 new.x = self.y
                 new.y = -self.x
             else:
                 new.x = -self.y
                 new.y = self.x
-            new.FB_color = self.LR_color
-            new.LR_color = self.FB_color
+            new.UD_color = self.LR_color
+            new.LR_color = self.UD_color
         else:
             raise ValueError("{} is not a valid rotation axis.".format(rotation_axis))
 
@@ -227,6 +227,8 @@ class Cube:
         if self.n != s2.n:
             return False
 
+        # this changes the internal representation but
+        # the list order doesn't matter for us
         self.cube.sort()
         s2.cube.sort()
 
@@ -285,8 +287,11 @@ class Cube:
            to the void in the direction given.'''
         return True
 
-    def move(self, dir):
-        pass
+    def move(self, dir, clockwise=True):
+        if dir == "F":
+            for cubie in self.front:
+                new = cubie.rotate(dir=dir, clockwise=clockwise)
+                print("{} -> {}".format(cubie, new))
 
 """ GLOBAL FUNCTIONS """
 
@@ -328,6 +333,7 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 
 
 if __name__ == "__main__":
+    """
     c1 = Cube(n=3)
     print("Max coord: {}\nRange: {}".format(c1.max_coord, c1.coordinate_range))
     print(c1)
@@ -336,7 +342,6 @@ if __name__ == "__main__":
     print(c1 == c2)
     c2.cube[0] = Cubie(-1, 0, -1, "R", "W", "B")
     print("After change: {}".format(c1 == c2))
-    print("{} < {} = {}".format(c1.cube[0], c2.cube[0], c1.cube[0] == c2.cube[0]))
 
     cubie = Cubie(-1, -1, -1, "R", "W", "B")
     print(cubie)
@@ -348,3 +353,10 @@ if __name__ == "__main__":
     cubie3 = cubie2.rotate(dir="U", clockwise=False)
     print(cubie3 == cubie)
     print(cubie3)
+    """
+    cube = Cube(n=2)
+    print(cube)
+
+    print("***************")
+    cube.move(dir="F")
+
