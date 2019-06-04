@@ -48,22 +48,22 @@ def setup(actions, use_exp_fn=False):
         # Change this if you implement an exploration function:
         print("You have not implemented an exploration function")
 
-def q_learning_driver(initial_state, n_transitions, end_early=False):
+def q_learning_driver(initial_state, n_transitions, end_early=False, verbose=False):
     """Drives the q learning process from the initial state.
     Runs n_transitions number of transitions aka agent turns,
     updating Q values each time.
 
     """
-    a = choose_action(a)
+    a = choose_action(a, verbose=verbose)
     for i in range(n_transitions):
-        s, a = transition_handler(s, a)
+        s, a = transition_handler(s, a, verbose=verbose)
 
         if s == Terminal_state:
             if end_early:
                 print("done early")
             else:
                 s = INITIAL_STATE
-                a = choose_action(s)
+                a = choose_action(s, verbose=verbose)
         else:
             if i % 100 == 99: 
                 print(".", end='')
@@ -91,7 +91,7 @@ def choose_action(s, verbose=False):
         rand_a = random.randint(0, len(ACTIONS) - 1)
         a = ACTIONS[rand_a]
         if verbose:
-            print("Selecting random action! {}".format(a.name))
+            print("Selecting random action! {}, ep: {}".format(a.name, EPSILON))
 
     else:
         a = max(Q_VALUES[s])
@@ -118,7 +118,7 @@ def R(s, a, sp):
     # Handle all other transitions:
     return LIVING_REWARD
 
-def transition_handler(s, a):
+def transition_handler(s, a, verbose=False):
     """Given a state s and an action a,
     handle the body of the looping q learning. 
 
@@ -128,12 +128,26 @@ def transition_handler(s, a):
 
     Returns sp and ap to be used as the new state and action for the following iteration
     """
-    pass
+    sp = a.state_tranf(s)
 
-def update_q_values(s, a, r, sp, ap):
+    if verbose:
+        print("New state:")
+        print(sp)
+
+    difference = update_q_values(s, a, sp)
+    update_weights(s, a, difference)
+
+    return sp, ap
+
+def update_q_values(s, a, sp):
     """Call this function whenever s has transitioned to another
     state to update the q values dictionary, Q_VALUES, which is set up as:
     Q_VALUES: {s -> {a: q value} }
+
+    - s: current state
+    - a: action taken to get to sp,
+    - sp: next state
+    - ap next action to take from sp
 
     The q value for a s, a pair can be retrieved as such: Q_VALUES[s][a]
     The ideal action for V(s) can be computed as: max(Q_VALUES[s]).
@@ -143,7 +157,23 @@ def update_q_values(s, a, r, sp, ap):
     Returns the difference between the sample and the old Q value estimate.
     """
     global Q_VALUES
-    pass
+
+    if not sp in Q_VALUES:
+        Q_VALUES[sp] = 0
+
+    # need to be cautious:
+    # make sure 1) we've seen state s and 2) we've done action on s... 
+    if not s in Q_VALUES:
+        Q_VALUES[s] = {}
+    if not a in Q_VALUES[s]:
+        Q_VALUES[s][a] = 0
+
+    sample = (R(s, a, sp) + GAMMA * max(Q_VALUES[sp]))
+    Q_s_a = Q_VALUES[s][a]
+
+    Q_VALUES[s][a] = (1 - ALPHA) * Q_s_a + ALPHA * sample
+
+    return sample - Q_s_a
 
 def update_weights(s, a, difference):
     """Update the feature weights. 
