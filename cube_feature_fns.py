@@ -18,22 +18,80 @@ def f0(s, a):
     return 1
 
 def f1(s, a):
-    pass
+    """Count number of reds on FRONT"""
+    res = 0
+    for c in s.front:
+        if c.FB_color == "R":
+            res += 1
+    return res
 
 def f2(s, a):
-    pass
+    """Count number of whites on UP"""
+    res = 0
+    for c in s.up:
+        if c.UD_color == "W":
+            res += 1
+    return res
 
 def f3(s, a):
-    pass
+    """Count number of yellows on down"""
+    res = 0
+    for c in s.down:
+        if c.UD_color == "Y":
+            res += 1
+    return res
 
 def f4(s, a):
-    pass
+    """Count number of oranges on BACK"""
+    res = 0
+    for c in s.back:
+        if c.FB_color == "O":
+            res += 1
+    return res
 
 def f5(s, a):
-    pass
+    """Count number of greens on LEFT"""
+    res = 0
+    for c in s.left:
+        if c.LR_color == "G":
+            res += 1
+    return res
 
 def f6(s, a):
-    pass
+    """Count number of blues on RIGHT"""
+    res = 0
+    for c in s.right:
+        if c.LR_color == "B":
+            res += 1
+    return res
+
+# Following 6 functions return answ for if action is taken for first 6
+def f7(s, a):
+    sp = a.state_transf(s)
+    return f1(sp, a)
+
+def f8(s, a):
+    sp = a.state_transf(s)
+    return f2(sp, a)
+
+def f9(s, a):
+    sp = a.state_transf(s)
+    return f3(sp, a)
+
+def f10(s, a):
+    sp = a.state_transf(s)
+    return f4(sp, a)
+
+def f11(s, a):
+    sp = a.state_transf(s)
+    return f5(sp, a)
+
+def f12(s, a):
+    sp = a.state_transf(s)
+    return f6(sp, a)
 
 
-FEATURES = [f0, f1, f2, f3, f4, f5, f6]
+FEATURES = [
+    f0, f1, f2, f3, f4, f5, f6,
+    f7, f8, f9, f10, f11, f12
+]

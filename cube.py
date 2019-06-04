@@ -197,9 +197,9 @@ class State:
         min_coord = min(self.coordinate_range)
 
         if x == min_coord:
-            LR_color = "B"
-        elif x == max_coord:
             LR_color = "G"
+        elif x == max_coord:
+            LR_color = "B"
 
         if y == min_coord:
             UD_color = "Y"
@@ -257,6 +257,7 @@ class State:
         return True
 
     def __str__(self):
+        """
         res = "Front:\n"
 
         for c in self.front:
@@ -276,8 +277,28 @@ class State:
         res +="Right:\n"
         for c in self.right:
             res += "{} [{} {} {}]\n".format(c.LR_color, c.x, c.y, c.z)
+        """
+        res = "Front: "
 
-        return res
+        for c in self.front:
+            res += "{}".format(c.FB_color)
+        res +="\nBack:  "
+        for c in self.back:
+            res += "{}".format(c.FB_color)
+        res +="\nUp:    "
+        for c in self.up:
+            res += "{}".format(c.UD_color)
+        res +="\nDown:  "
+        for c in self.down:
+            res += "{}".format(c.UD_color)
+        res +="\nLeft:  "
+        for c in self.left:
+            res += "{}".format(c.LR_color)
+        res +="\nRight: "
+        for c in self.right:
+            res += "{}".format(c.LR_color)
+
+        return res + "\n"
 
     def __hash__(self):
         return (self.__str__()).__hash__()
@@ -336,6 +357,14 @@ make_goal_state()
 def goal_test(s):
     goal = State(n=s.n)
     return s == goal
+
+def goal_test2(s):
+    """Check all reds on FRONT"""
+    res = 0
+    for c in s.front:
+        if c.FB_color == "R":
+            res += 1
+    return res == s.n * s.n
 
 def goal_message(s):
     global N

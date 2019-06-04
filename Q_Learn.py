@@ -14,6 +14,13 @@ from cube_feature_fns import *
 
 import random
 
+try:
+  import sys
+  arg2 = sys.argv[2]
+  N_TRANS = int(arg2)
+except:
+  N_TRANS = 5
+
 ACTIONS=None; Q_VALUES=None
 Terminal_state = None
 USE_EXPLORATION_FUNCTION = None
@@ -24,10 +31,10 @@ EXIT_ACTION = Operator("Exit", None, None)
 # model parameters
 ALPHA = 0.5
 CUSTOM_ALPHA = False
-EPSILON = 0.5
+EPSILON = 0.2
 CUSTOM_EPSILON = False
 GAMMA = 0.9
-LIVING_REWARD = -0.1
+LIVING_REWARD = 0.0
 
 def setup(actions, use_exp_fn=False):
     """ Basic setting up of global vars"""
@@ -54,8 +61,12 @@ def q_learning_driver(initial_state, n_transitions, end_early=False, verbose=Fal
     updating Q values each time.
 
     """
-    a = choose_action(a, verbose=verbose)
+    s = initial_state
+    a = choose_action(s, verbose=verbose)
     for i in range(n_transitions):
+        if verbose:
+            print("******* Iter #{} *******".format(i))
+
         s, a = transition_handler(s, a, verbose=verbose)
 
         if s == Terminal_state:
@@ -65,10 +76,15 @@ def q_learning_driver(initial_state, n_transitions, end_early=False, verbose=Fal
                 s = INITIAL_STATE
                 a = choose_action(s, verbose=verbose)
         else:
-            if i % 100 == 99: 
-                print(".", end='')
+            #if i % 100 == 99: 
+            #    print(".", end='')
+            pass
 
-    print("Done!")
+    for i in range(len(WEIGHTS)):
+        print("w{}: {}".format(i, WEIGHTS[i]))
+
+    print("Path:")
+    path = solution_path()
 
 
 def choose_action(s, verbose=False):
@@ -94,7 +110,7 @@ def choose_action(s, verbose=False):
             print("Selecting random action! {}, ep: {}".format(a.name, EPSILON))
 
     else:
-        a = max(Q_VALUES[s])
+        a, q = get_max_action_value(s)
 
         if verbose:
             print("Returning action '{}' ({})".format(a.name, Q_VALUES[s][a]))
@@ -110,11 +126,13 @@ def R(s, a, sp):
     """
     # Handle goal state transitions first...
     if goal_test(s):
-        if a.name == "Exit" and sp == Terminal_state: return 100.0
+        if a.name == "Exit" and sp == Terminal_state: 
+            print("WIN")
+            AssertionError("Bruh howd you win")
+            return 1000.0
         else: return 0.0
-    elif NGOALS==2 and goal_test2(s):
-        if a=="Exit" and sp == Terminal_state: return 10.0
-        else: return 0.0
+    elif goal_test2(s):
+        return 100.0
     # Handle all other transitions:
     return LIVING_REWARD
 
@@ -128,14 +146,15 @@ def transition_handler(s, a, verbose=False):
 
     Returns sp and ap to be used as the new state and action for the following iteration
     """
-    sp = a.state_tranf(s)
+    sp = a.state_transf(s)
+    ap = choose_action(sp, verbose=verbose)
 
     if verbose:
         print("New state:")
         print(sp)
 
     difference = update_q_values(s, a, sp)
-    update_weights(s, a, difference)
+    update_weights(s, a, difference, verbose=verbose)
 
     return sp, ap
 
@@ -159,23 +178,26 @@ def update_q_values(s, a, sp):
     global Q_VALUES
 
     if not sp in Q_VALUES:
-        Q_VALUES[sp] = 0
+        Q_VALUES[sp] = {}
+        Q_VALUES[sp][a] = 0.0
 
     # need to be cautious:
     # make sure 1) we've seen state s and 2) we've done action on s... 
     if not s in Q_VALUES:
         Q_VALUES[s] = {}
     if not a in Q_VALUES[s]:
-        Q_VALUES[s][a] = 0
+        Q_VALUES[s][a] = 0.0
 
-    sample = (R(s, a, sp) + GAMMA * max(Q_VALUES[sp]))
+    a, Q_sp_a = get_max_action_value(sp)
+
+    sample = R(s, a, sp) + GAMMA * Q_sp_a
     Q_s_a = Q_VALUES[s][a]
 
     Q_VALUES[s][a] = (1 - ALPHA) * Q_s_a + ALPHA * sample
 
     return sample - Q_s_a
 
-def update_weights(s, a, difference):
+def update_weights(s, a, difference, verbose):
     """Update the feature weights. 
 
     Edits WEIGHTS. Returns None.
@@ -183,6 +205,23 @@ def update_weights(s, a, difference):
     global WEIGHTS
     for i in range(len(WEIGHTS)):
         WEIGHTS[i] += ALPHA * difference * FEATURES[i](s, a)
+
+        if verbose:
+            print("F{}: {}, W{}: {} (diff: {})".format(i, FEATURES[i](s, a), i, WEIGHTS[i], difference))
+
+def get_max_action_value(s):
+    """Returns a tuple with the action, q value
+    associated with the max q value for the given state.
+    """
+    actions = Q_VALUES[s]
+    max_action = None
+    max_q = -10000
+    for a in actions:
+        q_value = Q_VALUES[s][a]
+        if q_value > max_q:
+            max_action = a
+            max_q = q_value
+    return max_action, max_q
 
 
 def extract_policy(S, A):
@@ -199,10 +238,26 @@ def extract_policy(S, A):
     
     return Policy
 
+def solution_path():
+    s = INITIAL_STATE
+    i = 0
+    path = []
+    while not goal_test(s) and i < 100:
+        a, q = get_max_action_value(s)
+        print("A: {} ({})".format(a.name, q))
+        path.append(a)
+        s = a.state_transf(s)
+        i += 1
+
+        if s not in Q_VALUES:
+            break
+    return path
+
+
 if __name__ == "__main__":
     setup(actions=OPERATORS, use_exp_fn=False)
 
     #for op in ACTIONS:
     #    print(op.name)
-
-    choose_action(INITIAL_STATE, verbose=True)
+    print(GOAL_STATE)
+    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, verbose=True)
