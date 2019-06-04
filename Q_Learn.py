@@ -12,6 +12,8 @@ import cube
 
 from cube_feature_fns import *
 
+import random
+
 ACTIONS=None; Q_VALUES=None
 Terminal_state = None
 USE_EXPLORATION_FUNCTION = None
@@ -69,7 +71,7 @@ def q_learning_driver(initial_state, n_transitions, end_early=False):
     print("Done!")
 
 
-def choose_action(s):
+def choose_action(s, verbose=False):
     """Given a state, decides on the next action to take.
     It will try to choose the optimal action based on the policy,
     but depending on the value of episilon, there is a chance a random
@@ -80,9 +82,25 @@ def choose_action(s):
 
     Return: Operator class that is an action
     """
-    if is_valid_goal_state(s):
+    if goal_test(s):
+        print("Goal state reached. Returning exit action.")
         return EXIT_ACTION
-    pass
+    
+    r = random.uniform(0, 1)
+    if r <= EPSILON or not s in Q_VALUES: # if we haven't seen the state, choose rand
+        rand_a = random.randint(0, len(ACTIONS) - 1)
+        a = ACTIONS[rand_a]
+        if verbose:
+            print("Selecting random action! {}".format(a.name))
+
+    else:
+        a = max(Q_VALUES[s])
+
+        if verbose:
+            print("Returning action '{}' ({})".format(a.name, Q_VALUES[s][a]))
+    return a
+
+
 
 NGOALS=1 # EDIT THIS LATER MAYBE?
 def R(s, a, sp):
@@ -154,5 +172,7 @@ def extract_policy(S, A):
 if __name__ == "__main__":
     setup(actions=OPERATORS, use_exp_fn=False)
 
-    for op in ACTIONS:
-        print(op.name)
+    #for op in ACTIONS:
+    #    print(op.name)
+
+    choose_action(INITIAL_STATE, verbose=True)
