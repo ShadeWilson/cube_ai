@@ -17,6 +17,7 @@ Terminal_state = None
 USE_EXPLORATION_FUNCTION = None
 INITIAL_STATE = None
 WEIGHTS = None
+EXIT_ACTION = Operator("Exit", None, None)
 
 # model parameters
 ALPHA = 0.5
@@ -32,26 +33,40 @@ def setup(actions, use_exp_fn=False):
     global Terminal_state, INITIAL_STATE, Q_VALUES
     global WEIGHTS
 
-    actions.append(Operator("Exit", None, None)) 
     ACTIONS = actions
-
     USE_EXPLORATION_FUNCTION = use_exp_fn
     Terminal_state = State(n=N)
     INITIAL_STATE = CREATE_INITIAL_STATE()
     Q_VALUES = {}
 
     # initalize feature weights to 1
-    WEIGHTS = {}
-    for i in range(len(FEATURES)):
-        WEIGHTS[i] = 1
+    WEIGHTS = [1 for i in range(len(FEATURES))]
     
     if USE_EXPLORATION_FUNCTION:
         # Change this if you implement an exploration function:
         print("You have not implemented an exploration function")
 
-def q_learning_driver(initial_state, iterations):
-    """Drives the q learning process from the initial state."""
-    pass
+def q_learning_driver(initial_state, n_transitions, end_early=False):
+    """Drives the q learning process from the initial state.
+    Runs n_transitions number of transitions aka agent turns,
+    updating Q values each time.
+
+    """
+    a = choose_action(a)
+    for i in range(n_transitions):
+        s, a = transition_handler(s, a)
+
+        if s == Terminal_state:
+            if end_early:
+                print("done early")
+            else:
+                s = INITIAL_STATE
+                a = choose_action(s)
+        else:
+            if i % 100 == 99: 
+                print(".", end='')
+
+    print("Done!")
 
 
 def choose_action(s):
@@ -66,7 +81,7 @@ def choose_action(s):
     Return: Operator class that is an action
     """
     if is_valid_goal_state(s):
-        return "Exit"
+        return EXIT_ACTION
     pass
 
 NGOALS=1 # EDIT THIS LATER MAYBE?
@@ -77,7 +92,7 @@ def R(s, a, sp):
     """
     # Handle goal state transitions first...
     if goal_test(s):
-        if a=="Exit" and sp == Terminal_state: return 100.0
+        if a.name == "Exit" and sp == Terminal_state: return 100.0
         else: return 0.0
     elif NGOALS==2 and goal_test2(s):
         if a=="Exit" and sp == Terminal_state: return 10.0
@@ -121,6 +136,20 @@ def update_weights(s, a, difference):
     for i in range(len(WEIGHTS)):
         WEIGHTS[i] += ALPHA * difference * FEATURES[i](s, a)
 
+
+def extract_policy(S, A):
+    """Return a dictionary mapping states to actions. Obtain the policy
+    using the q-values most recently computed.
+    Ties between actions having the same (s, a) value can be broken arbitrarily.
+    Reminder: goal states should map to the Exit action, and no other states
+    should map to the Exit action.
+
+    what does this even mean here???
+    """
+    global Policy
+    Policy = {}
+    
+    return Policy
 
 if __name__ == "__main__":
     setup(actions=OPERATORS, use_exp_fn=False)
