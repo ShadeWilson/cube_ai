@@ -22,7 +22,7 @@ except:
   N_TRANS = 5
 
 ACTIONS=None; Q_VALUES=None
-Terminal_state = None
+Terminal_state = -1
 USE_EXPLORATION_FUNCTION = None
 INITIAL_STATE = None
 WEIGHTS = None
@@ -71,15 +71,17 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
 
             s, a = transition_handler(s, a, verbose=verbose)
 
-            if s == Terminal_state:
+            if goal_test(s):
+                update_q_values(s, a, Terminal_state)
                 if end_early:
                     print("done early")
+                    break
                 else:
                     s = initial_state
                     a = choose_action(s, verbose=verbose)
             else:
-                #if i % 100 == 99: 
-                #    print(".", end='')
+                if not verbose and i % 100 == 99: 
+                    print(".", end='')
                 pass
 
         for i in range(len(WEIGHTS)):
@@ -101,8 +103,8 @@ def choose_action(s, verbose=False):
     Return: Operator class that is an action
     """
     if goal_test(s):
-        AssertionError("wat")
-        print("Goal state reached. Returning exit action.")
+        if verbose:
+            print("Goal state reached. Returning exit action.")
         return EXIT_ACTION
     
     r = random.uniform(0, 1)
@@ -129,14 +131,11 @@ def R(s, a, sp):
     """
     # Handle goal state transitions first...    
     if goal_test(s):
-        AssertionError("Bruh howd you win")
-        if a.name == "Exit" and sp == Terminal_state: 
-            print("WIN")
-            AssertionError("Bruh howd you win")
+        if a.name == "Exit": 
+            #print("WIN")
             return 100.0
         else: return 0.0
     elif goal_test2(s):
-        AssertionError("bruh nice")
         return 10.0
     # Handle all other transitions:
     return LIVING_REWARD
@@ -164,10 +163,18 @@ def transition_handler(s, a, verbose=False):
     return sp, ap
 
 def compute_q_value(s, a):
-    """Compute Q values,
-    specific to feature-based Q learning.
+    """Compute Q values, specific to feature-based Q learning.
+
+    If we've visited a state and performed an action before,
+    return the actual Q value. Otherwise, compute the 
+    approximate q value based on the features.
     """
     global Q_VALUES
+
+    if s in Q_VALUES and a in Q_VALUES[s]:
+        #print("Seen this (s, a) pair: {}".format(Q_VALUES[s][a]))
+        return Q_VALUES[s][a]
+
     res = 0.0
     for i in range(len(WEIGHTS)):
         res += WEIGHTS[i] * FEATURES[i](s, a)
@@ -198,16 +205,16 @@ def update_q_values(s, a, sp):
     """
     global Q_VALUES
 
-    if not sp in Q_VALUES:
-        Q_VALUES[sp] = {}
-        Q_VALUES[sp][a] = 0.0
+    #if not sp in Q_VALUES:
+    #    Q_VALUES[sp] = {}
+    #    Q_VALUES[sp][a] = 0.0
 
     # need to be cautious:
     # make sure 1) we've seen state s and 2) we've done action on s... 
-    if not s in Q_VALUES:
-        Q_VALUES[s] = {}
-    if not a in Q_VALUES[s]:
-        Q_VALUES[s][a] = 0.0
+    #if not s in Q_VALUES:
+    #    Q_VALUES[s] = {}
+    #if not a in Q_VALUES[s]:
+    #    Q_VALUES[s][a] = 0.0
 
     ap = choose_action(sp)
     Q_sp_a = compute_q_value(sp, ap)
@@ -304,4 +311,4 @@ if __name__ == "__main__":
     #    print(op.name)
     print(INITIAL_STATE)
 
-    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, n_repeats=3, verbose=True)
+    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, n_repeats=10, verbose=False)

@@ -404,7 +404,14 @@ class Operator:
 def CREATE_INITIAL_STATE():
     cube = State(n=N)
     cube = cube.move_180(dir="F")
-    #cube = cube.move_180(dir="D")
+    cube = cube.move_180(dir="D")
+    cube = cube.move_180(dir="U")
+    cube = cube.move_180(dir="B")
+    cube = cube.move_180(dir="F")
+    cube = cube.move_180(dir="B")
+    cube = cube.move_180(dir="L")
+    cube = cube.move_180(dir="U")
+    cube = cube.move_180(dir="R")
     return cube
 
 directions = ["F", "B", "U", "D", "L", "R"]

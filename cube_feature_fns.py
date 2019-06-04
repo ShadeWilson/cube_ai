@@ -9,7 +9,7 @@ by implementing feature-based reenforcement learning.
 Each function is of the form: F(s, a), where
 s is a state and a is the action. These features are typically binary.
 """
-
+from cube import *
 
 def f0(s, a):
     """Default function always returns 1.
@@ -102,8 +102,25 @@ def f12(s, a):
     sp = a.state_transf(s)
     return f6(sp, a)
 
+def f13(s, a):
+    """Next action leads to goal state"""
+    if a.name == "Exit":
+        return 1
+    sp = a.state_transf(s)
+    if goal_test(sp):
+        return 1
+    else:
+        return 0
+
+def f14(s, a):
+    """First layer solved. Considering red as base"""
+    if f1(s, a) != s.n * s.n:
+        return 0
+    pass
+
+
 
 FEATURES = [
     f0, f1, f2, f3, f4, f5, f6,
-    f7, f8, f9, f10, f11, f12
+    f7, f8, f9, f10, f11, f12, f13
 ]
