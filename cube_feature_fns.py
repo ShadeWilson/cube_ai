@@ -114,13 +114,31 @@ def f13(s, a):
 
 def f14(s, a):
     """First layer solved. Considering red as base"""
+    # red must be solved
     if f1(s, a) != s.n * s.n:
         return 0
-    pass
+    # check cubes on FRONT's plane are in right place
+    min_coord = min(s.coordinate_range)
+    for cubie in s.back:
+        if cubie.z == min_coord and cubie.FB_color != "O":
+            return 0
+    for cubie in s.up:
+        if cubie.z == min_coord and cubie.UD_color != "W":
+            return 0
+    for cubie in s.down:
+        if cubie.z == min_coord and cubie.UD_color != "Y":
+            return 0
+    for cubie in s.left:
+        if cubie.z == min_coord and cubie.LR_color != "G":
+            return 0
+    for cubie in s.right:
+        if cubie.z == min_coord and cubie.LR_color != "B":
+            return 0
+    return 1
 
 
 
 FEATURES = [
     f0, f1, f2, f3, f4, f5, f6,
-    f7, f8, f9, f10, f11, f12, f13
+    f7, f8, f9, f10, f11, f12, f13, f14
 ]

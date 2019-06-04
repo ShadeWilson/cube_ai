@@ -401,17 +401,24 @@ class Operator:
         return self.name == s2.name
 
 
-def CREATE_INITIAL_STATE():
+def CREATE_INITIAL_STATE(level=0):
     cube = State(n=N)
-    cube = cube.move_180(dir="F")
-    cube = cube.move_180(dir="D")
-    cube = cube.move_180(dir="U")
-    cube = cube.move_180(dir="B")
-    cube = cube.move_180(dir="F")
-    cube = cube.move_180(dir="B")
-    cube = cube.move_180(dir="L")
-    cube = cube.move_180(dir="U")
-    cube = cube.move_180(dir="R")
+
+    if level == 0:
+        cube = cube.move_180(dir="F")
+    if level == 1:
+        cube = cube.move_180(dir="F")
+        cube = cube.move_180(dir="D")
+    if level == 2:
+        cube = cube.move_180(dir="F")
+        cube = cube.move_180(dir="D")
+        cube = cube.move_180(dir="U")
+        cube = cube.move_180(dir="B")
+        cube = cube.move_180(dir="F")
+        cube = cube.move_180(dir="B")
+        cube = cube.move_180(dir="L")
+        cube = cube.move_180(dir="U")
+        cube = cube.move_180(dir="R")
     return cube
 
 directions = ["F", "B", "U", "D", "L", "R"]

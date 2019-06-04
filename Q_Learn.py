@@ -18,8 +18,10 @@ try:
   import sys
   arg2 = sys.argv[2]
   N_TRANS = int(arg2)
+  LEVEL = int(sys.argv[3])
 except:
   N_TRANS = 5
+  LEVEL = 0
 
 ACTIONS=None; Q_VALUES=None
 Terminal_state = -1
@@ -36,7 +38,7 @@ CUSTOM_EPSILON = False
 GAMMA = 0.8
 LIVING_REWARD = -0.1
 
-def setup(actions, use_exp_fn=False):
+def setup(actions, level=0, use_exp_fn=False):
     """ Basic setting up of global vars"""
     global ACTIONS, USE_EXPLORATION_FUNCTION
     global Terminal_state, INITIAL_STATE, Q_VALUES
@@ -45,7 +47,7 @@ def setup(actions, use_exp_fn=False):
     ACTIONS = actions
     USE_EXPLORATION_FUNCTION = use_exp_fn
     Terminal_state = State(n=N)
-    INITIAL_STATE = CREATE_INITIAL_STATE()
+    INITIAL_STATE = CREATE_INITIAL_STATE(level=level)
     Q_VALUES = {}
 
     # initalize feature weights to 1
@@ -61,7 +63,7 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
     updating Q values each time.
 
     """
-    for _ in range(n_repeats):
+    for _ in range(1):
         s = initial_state
         a = choose_action(s, verbose=verbose)
 
@@ -81,14 +83,27 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
                     a = choose_action(s, verbose=verbose)
             else:
                 if not verbose and i % 100 == 99: 
-                    print(".", end='')
+                    #print(".", end='')
+                    pass
                 pass
 
         for i in range(len(WEIGHTS)):
             print("w{}: {}".format(i, WEIGHTS[i]))
 
-    print("Path:")
+    
     path = solution_path()
+
+    if not check_convergence(path) and n_repeats > 0:
+        # havent converged, try try again
+        print("No convergence yet. Iterating {} more times with {} trainings each.".format(n_repeats, n_transitions))
+        q_learning_driver(initial_state, n_transitions, n_repeats - 1, end_early, verbose)
+    elif check_convergence(path):
+        print("Converged!")
+        print("Path:")
+        print_solution_path(path)
+    elif n_repeats == 0:
+        print("Did not converge before ran out of repeats.")
+
 
 
 def choose_action(s, verbose=False):
@@ -249,18 +264,19 @@ def get_max_action_value(s):
     """Returns a tuple with the action, q value
     associated with the max q value for the given state.
     """
-    if s not in Q_VALUES:
-        for a in OPERATORS_180:
-            compute_q_value(s, a)
-
-    actions = Q_VALUES[s]
+    
+    actions = OPERATORS_180
     max_action = None
     max_q = None
     for a in actions:
-        q_value = Q_VALUES[s][a]
+        q_value = compute_q_value(s, a)
         if max_action is None or max_q is None or q_value > max_q:
             max_action = a
             max_q = q_value
+        if a.name == "Exit":
+            max_action = a
+            max_q = q_value
+            break
     return max_action, max_q
 
 def temper_constants():
@@ -284,28 +300,49 @@ def extract_policy(S, A):
 def solution_path():
     s = INITIAL_STATE
     i = 0
+
+    # tuple with state, action, q value
     path = []
-    print("Inital state:")
-    print(s)
+    #print("Inital state:")
+    #print(s)
     while i < 100:
         a, q = get_max_action_value(s)
-        print("{} ({})".format(a.name, q))
-        path.append(a)
+        #print("{} ({})".format(a.name, q))
+        path.append((s, a, q))
         s = a.state_transf(s)
-        print(s)
+        #print(s)
         i += 1
 
         if goal_test(s):
-            a, q = get_max_action_value(s)
-            print("{} ({})".format(a.name, q))
-            print("Policy recommends the goal. Congrats!")
+            q = compute_q_value(s, EXIT_ACTION)
+            path.append((s, EXIT_ACTION, q))
+            #print("{} ({})".format(EXIT_ACTION.name, q))
+            #print("Policy recommends the goal. Congrats!")
             break
     
     return path
 
+def print_solution_path(path):
+    """Print solution path. 
+    path is tuple of the form (s, a, q)"""
+    step = 0
+    for s, a, q in path:
+        if step == 0:
+            print("Initial state:")
+        else:
+            print("State #{}".format(step))
+        print(s)
+        print("{} ({})".format(a.name, q))
+
+
+def check_convergence(path):
+    s, a, q = path[-1]
+    #print("Check converge {} == 'Exit': {}".format(a.name, a.name == "Exit"))
+    return a.name == "Exit"
+
 
 if __name__ == "__main__":
-    setup(actions=OPERATORS_180, use_exp_fn=False)
+    setup(actions=OPERATORS_180, level=LEVEL, use_exp_fn=False)
 
     #for op in ACTIONS:
     #    print(op.name)
