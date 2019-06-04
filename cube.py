@@ -7,6 +7,16 @@ CSE 415
 5/28/19
 """
 
+N = 2  # Use default, but override if new value supplied
+             # by the user on the command line.
+try:
+  import sys
+  arg1 = sys.argv[1]
+  N = int(arg1)
+  print("N = "+arg1)
+except:
+  pass
+
 
 class Cubie:
     """ Represents a single cubie (ie block) in a Rubik's cube.
@@ -129,7 +139,7 @@ class Cubie:
 
 
 
-class Cube:
+class State:
     def __init__(self, n=2, cube=None):
         """n is the dimention of the NxN Rubiks cube.
 
@@ -240,9 +250,9 @@ class Cube:
 
         for i in range(len(self.cube)):
             if self.cube[i] != s2.cube[i]:
-                print("__eq__")
-                print(self.cube[i])
-                print(s2.cube[i])
+                #print("__eq__")
+                #print(self.cube[i])
+                #print(s2.cube[i])
                 return False
         return True
 
@@ -250,22 +260,22 @@ class Cube:
         res = "Front:\n"
 
         for c in self.front:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.FB_color, c.x, c.y, c.z)
         res +="Back:\n"
         for c in self.back:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.FB_color, c.x, c.y, c.z)
         res +="Up:\n"
         for c in self.up:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.UD_color, c.x, c.y, c.z)
         res +="Down:\n"
         for c in self.down:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.UD_color, c.x, c.y, c.z)
         res +="Left:\n"
         for c in self.left:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.LR_color, c.x, c.y, c.z)
         res +="Right:\n"
         for c in self.right:
-            res += str(c) + "\n"
+            res += "{} [{} {} {}]\n".format(c.LR_color, c.x, c.y, c.z)
 
         return res
 
@@ -275,7 +285,7 @@ class Cube:
     def copy(self):
         # Performs an appropriately deep copy of a state,
         # for use by operators in creating new states.
-        new = Cube(self.n, self.cube)
+        new = State(self.n, self.cube)
 
         return new
 
@@ -315,26 +325,48 @@ class Cube:
 
 """ GLOBAL FUNCTIONS """
 
+def make_goal_state():
+    global GOAL_STATE, N
+    GOAL_STATE = State(n=N)
+    #print("GOAL_STATE="+str(GOAL_STATE))
+
+make_goal_state()
+
+
 def goal_test(s):
-    goal = Cube(n=s.n)
+    goal = State(n=s.n)
     return s == goal
 
 def goal_message(s):
-    return "You've solved the Rubik's cube!"
+    global N
+    return "You've solved the {}x{} Rubik's cube!".format(N, N)
 
 """ OPERATORS """
 
 class Operator:
-  def __init__(self, name, precond, state_transf):
-    self.name = name
-    self.precond = precond
-    self.state_transf = state_transf
+    def __init__(self, name, precond, state_transf):
+        self.name = name
+        self.precond = precond
+        self.state_transf = state_transf
 
-  def is_applicable(self, s):
-    return self.precond(s)
+    def is_applicable(self, s):
+        return self.precond(s)
 
-  def apply(self, s):
-    return self.state_transf(s)
+    def apply(self, s):
+        return self.state_transf(s)
+
+    def __hash__(self):
+        return self.name.__hash__()
+
+    def __eq__(self, s2):
+        return self.name == s2.name
+
+
+def CREATE_INITIAL_STATE():
+    cube = State(n=N)
+    rotated = cube.move(dir="F")
+    rotated = rotated.move(dir="U")
+    return rotated
 
 directions = ["F", "B", "U", "D", "L", "R"]
 clockwise_opts = [True, False]
@@ -360,14 +392,14 @@ GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 
 if __name__ == "__main__":
     
-    """
-    c1 = Cube(n=2)
+    
+    c1 = State(n=2)
     print("Max coord: {}\nRange: {}".format(c1.max_coord, c1.coordinate_range))
-    print(c1)
+    #print(c1)
 
     c2 = c1.copy()
     print("Copy test: {}".format(c1 == c2))
-
+    """
     c3 = c2.move(dir="F")
     #print("Copy test 2: {}".format(c2 == c3))
     
@@ -417,7 +449,7 @@ if __name__ == "__main__":
     print(cubie3)
     """
     
-    cube = Cube(n=2)
+    cube = State(n=N)
     print(cube)
 
     for op in OPERATORS:
