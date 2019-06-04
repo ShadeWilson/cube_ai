@@ -158,6 +158,22 @@ def transition_handler(s, a, verbose=False):
 
     return sp, ap
 
+def compute_q_value(s, a):
+    """Compute Q values,
+    specific to feature-based Q learning.
+    """
+    global Q_VALUES
+    res = 0.0
+    for i in range(len(WEIGHTS)):
+        res += WEIGHTS[i] * FEATURES[i](s, a)
+
+    if not s in Q_VALUES:
+        Q_VALUES[s] = {}
+    
+    Q_VALUES[s][a] = res
+
+    return res
+
 def update_q_values(s, a, sp):
     """Call this function whenever s has transitioned to another
     state to update the q values dictionary, Q_VALUES, which is set up as:
@@ -188,7 +204,8 @@ def update_q_values(s, a, sp):
     if not a in Q_VALUES[s]:
         Q_VALUES[s][a] = 0.0
 
-    a, Q_sp_a = get_max_action_value(sp)
+    ap = choose_action(sp)
+    Q_sp_a = compute_q_value(sp, ap)
 
     sample = R(s, a, sp) + GAMMA * Q_sp_a
     Q_s_a = Q_VALUES[s][a]
