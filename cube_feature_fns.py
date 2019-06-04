@@ -67,26 +67,38 @@ def f6(s, a):
 
 # Following 6 functions return answ for if action is taken for first 6
 def f7(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f1(sp, a)
 
 def f8(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f2(sp, a)
 
 def f9(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f3(sp, a)
 
 def f10(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f4(sp, a)
 
 def f11(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f5(sp, a)
 
 def f12(s, a):
+    if a.name == "Exit":
+        return s.n * s.n
     sp = a.state_transf(s)
     return f6(sp, a)
 

@@ -280,6 +280,12 @@ class State:
         """
         res = "Front: "
 
+        self.front.sort()
+        self.back.sort()
+        self.up.sort()
+        self.down.sort()
+        self.left.sort()
+        self.right.sort()
         for c in self.front:
             res += "{}".format(c.FB_color)
         res +="\nBack:  "
@@ -340,6 +346,10 @@ class State:
             new_cube._add_to_face(cubie)
 
         return new_cube
+    def move_180(self, dir):
+        new = self.move(dir=dir)
+        new = new.move(dir=dir)
+        return new
 
 
 
@@ -393,9 +403,9 @@ class Operator:
 
 def CREATE_INITIAL_STATE():
     cube = State(n=N)
-    rotated = cube.move(dir="F")
-    rotated = rotated.move(dir="U")
-    return rotated
+    cube = cube.move_180(dir="F")
+    #cube = cube.move_180(dir="D")
+    return cube
 
 directions = ["F", "B", "U", "D", "L", "R"]
 clockwise_opts = [True, False]
@@ -409,6 +419,10 @@ OPERATORS = [Operator("Rotate " + str(dir) + " (clockwise=" + str(opt) + ")",
                       lambda s,dir1=dir, opt1=opt: s.move(dir1, opt1) )
              for dir, opt in opts]
 
+OPERATORS_180 = [Operator("Rotate 180'" + str(dir),
+                      lambda s,dir1=dir: s.can_move(dir1),
+                      lambda s,dir1=dir: s.move_180(dir1) )
+             for dir in directions]
 
 #<GOAL_TEST> (optional)
 GOAL_TEST = lambda s: goal_test(s)
@@ -485,4 +499,3 @@ if __name__ == "__main__":
         print(op.name)
         new_state = op.state_transf(cube)
         print(new_state)
-
