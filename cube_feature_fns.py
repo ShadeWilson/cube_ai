@@ -105,14 +105,34 @@ def f12(s, a):
 def f13(s, a):
     """Next action leads to goal state"""
     if a.name == "Exit":
-        return 1
+        return s.n*s.n
     sp = a.state_transf(s)
-    if goal_test(sp):
-        return 1
+    if goal_test(sp) or goal_test2(sp):
+        return s.n*s.n
     else:
         return 0
 
 def f14(s, a):
+    """Red cross. Hard-coded for 3x3"""
+    min_coord = min(s.coordinate_range)
+    max_coord = max(s.coordinate_range)
+
+    cross_coords = [
+        # bottom and top of cross, respectively
+        (0, min_coord, min_coord), (0, max_coord, min_coord),
+        # L/R
+        (min_coord, 0, min_coord), (max_coord, 0, min_coord),
+        (0, 0, min_coord) # center
+    ]
+
+    for c in s.front:
+        coord = (c.x, c.y, c.z)
+        if coord in cross_coords and not c.FB_color == "F":
+            return 0
+    print(s)
+    return 1
+
+def f15(s, a):
     """First layer solved. Considering red as base"""
     # red must be solved
     if f1(s, a) != s.n * s.n:
@@ -134,11 +154,23 @@ def f14(s, a):
     for cubie in s.right:
         if cubie.z == min_coord and cubie.LR_color != "B":
             return 0
-    return 1
+
+    return s.n * s.n
+
+def f16(s, a):
+    """First layer solved after action. Considering red as base"""
+    # red must be solved
+    if a.name == "Exit":
+        return s.n * s.n
+    sp = a.state_transf(s)
+    return f15(sp, a)
 
 
 
-FEATURES = [
-    f0, f1, f2, f3, f4, f5, f6,
-    f7, f8, f9, f10, f11, f12, f13, f14
+FEATURES_2x2 = [
+    f0, f1, f2, f5, f7,
+    f8, f11, f13
 ]
+FEATURES_3x3 = [f0, f1, f2, f5, f7, f8, f11, f13, f14, f15, f16]
+
+FEATURES_LIST = [[], [], FEATURES_2x2, FEATURES_3x3]

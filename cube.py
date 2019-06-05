@@ -7,6 +7,8 @@ CSE 415
 5/28/19
 """
 
+import random
+
 N = 2  # Use default, but override if new value supplied
              # by the user on the command line.
 try:
@@ -351,6 +353,23 @@ class State:
         new = new.move(dir=dir)
         return new
 
+    def scramble_180(self, n_moves=20):
+        cube = State(n=self.n)
+        dirs = ["F", "B", "U", "D", "L", "R"]
+
+        for _ in range(n_moves):
+            r = random.randint(0, len(dirs) - 1)
+            cube = cube.move_180(dir=dirs[r])
+        return cube
+
+    def scramble(self, n_moves=20):
+        cube = State(n=self.n)
+        dirs = ["F", "B", "U", "D", "L", "R"]
+
+        for _ in range(n_moves):
+            r = random.randint(0, len(dirs) - 1)
+            cube = cube.move(dir=dirs[r])
+        return cube
 
 
 
@@ -363,18 +382,45 @@ def make_goal_state():
 
 make_goal_state()
 
+def rotate_whole_cube(s, dir):
+    rotated = []
+    for c in s.cube:
+        rotated.append(c.rotate(dir=dir))
+    new = State(n=s.n, cube=rotated)
+    return new
 
 def goal_test(s):
     goal = State(n=s.n)
-    return s == goal
+    if s == goal:
+        return True
+    else:
+        new = s.copy()
+        for _ in range(3): # rotate around Z 4 times
+            rotated = rotate_whole_cube(new, dir="F")
+            if rotated == goal:
+                return True
+            else:
+                new = rotated
+        new = s.copy()
+        for _ in range(3): # rotate around Z 4 times
+            rotated = rotate_whole_cube(new, dir="L")
+            if rotated == goal:
+                return True
+            else:
+                new = rotated
+
+        return False
+
 
 def goal_test2(s):
     """Check all reds on FRONT"""
-    res = 0
-    for c in s.front:
-        if c.FB_color == "R":
-            res += 1
-    return res == s.n * s.n
+    sides = [s.front, s.back, s.up, s.down, s.left, s.right]
+    for side in sides:
+        res = 0
+        for c in side:
+            if c.FB_color == "R": res += 1
+        if res == s.n * s.n: return True
+    return False
 
 def goal_message(s):
     global N
@@ -419,6 +465,10 @@ def CREATE_INITIAL_STATE(level=0):
         cube = cube.move_180(dir="L")
         cube = cube.move_180(dir="U")
         cube = cube.move_180(dir="R")
+    if level == 3:
+        cube = cube.scramble_180(n_moves=50)
+    if level == 4:
+        cube = cube.scramble(n_moves=50)
     return cube
 
 directions = ["F", "B", "U", "D", "L", "R"]
@@ -509,7 +559,8 @@ if __name__ == "__main__":
     cube = State(n=N)
     print(cube)
 
-    for op in OPERATORS:
-        print(op.name)
-        new_state = op.state_transf(cube)
-        print(new_state)
+    #for op in OPERATORS:
+    #   print(op.name)
+    #    new_state = op.state_transf(cube)
+    #    print(new_state)
+    print(cube.scramble(n_moves=100))

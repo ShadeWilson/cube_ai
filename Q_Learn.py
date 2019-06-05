@@ -13,15 +13,19 @@ import cube
 from cube_feature_fns import *
 
 import random
+import sys
 
 try:
-  import sys
-  arg2 = sys.argv[2]
-  N_TRANS = int(arg2)
-  LEVEL = int(sys.argv[3])
+    arg2 = sys.argv[2]
+    N_TRANS = int(arg2)
+    N_REPEATS = int(sys.argv[3])
+    LEVEL = int(sys.argv[4])
 except:
-  N_TRANS = 5
-  LEVEL = 0
+    print("Usage: python Q_Learn.py [N] [n_transitions] [n_repeats] [level (0 - 3)]")
+    sys.exit()
+
+print("{} transitions, {} repeats".format(N_TRANS, N_REPEATS))
+print("Level: {}".format(LEVEL))
 
 ACTIONS=None; Q_VALUES=None
 Terminal_state = -1
@@ -31,31 +35,50 @@ WEIGHTS = None
 EXIT_ACTION = Operator("Exit", None, None)
 
 # model parameters
-ALPHA = 0.5
-CUSTOM_ALPHA = False
-EPSILON = 0.2
-CUSTOM_EPSILON = False
-GAMMA = 0.8
+ORIGINAL_ALPHA = 0.5
+ORIGINAL_EPSILON = 1.0
+ORIGINAL_GAMMA = 0.8
 LIVING_REWARD = -0.1
+
+ALPHA = None
+EPSILON = None
+GAMMA = None
+
+def adjust_params(reset=False, use_exp_fn=False):
+    """Decrease parameters using some function over time.
+    """
+    global ALPHA, EPSILON, GAMMA
+    if reset:
+        ALPHA = ORIGINAL_ALPHA
+        EPSILON = ORIGINAL_EPSILON
+        GAMMA = ORIGINAL_GAMMA
+        return
+
+    if use_exp_fn:
+        ALPHA = ALPHA / 2
+        EPSILON = EPSILON / 2
 
 def setup(actions, level=0, use_exp_fn=False):
     """ Basic setting up of global vars"""
     global ACTIONS, USE_EXPLORATION_FUNCTION
     global Terminal_state, INITIAL_STATE, Q_VALUES
-    global WEIGHTS
+    global WEIGHTS, FEATURES
 
     ACTIONS = actions
     USE_EXPLORATION_FUNCTION = use_exp_fn
     Terminal_state = State(n=N)
     INITIAL_STATE = CREATE_INITIAL_STATE(level=level)
     Q_VALUES = {}
+    FEATURES = FEATURES_LIST[N]
 
-    # initalize feature weights to 1
+    # initalize feature weights to 0
     WEIGHTS = [0 for i in range(len(FEATURES))]
     
-    if USE_EXPLORATION_FUNCTION:
-        # Change this if you implement an exploration function:
-        print("You have not implemented an exploration function")
+    adjust_params(reset=True, use_exp_fn=USE_EXPLORATION_FUNCTION)
+
+
+
+
 
 def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, verbose=False):
     """Drives the q learning process from the initial state.
@@ -63,6 +86,7 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
     updating Q values each time.
 
     """
+    print("PARAMETERS:\nALPHA: {}; EPSILON: {}, GAMMA: {}\nLiving reward: {}".format(ALPHA, EPSILON, GAMMA, LIVING_REWARD))
     for _ in range(1):
         s = initial_state
         a = choose_action(s, verbose=verbose)
@@ -93,9 +117,10 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
     
     path = solution_path()
 
-    if not check_convergence(path) and n_repeats > 0:
+    if n_repeats > 0:
         # havent converged, try try again
-        print("No convergence yet. Iterating {} more times with {} trainings each.".format(n_repeats, n_transitions))
+        print("Iterating {} more times with {} trainings each.".format(n_repeats, n_transitions))
+        adjust_params(reset=False, use_exp_fn=USE_EXPLORATION_FUNCTION)
         q_learning_driver(initial_state, n_transitions, n_repeats - 1, end_early, verbose)
     elif check_convergence(path):
         print("Converged!")
@@ -247,25 +272,27 @@ def update_weights(s, a, difference, verbose):
     Edits WEIGHTS. Returns None.
     """
     global WEIGHTS
-    sum = 0.0
+    max_w = -1
     if verbose:
         print("Diff: {}".format(difference))
     for i in range(len(WEIGHTS)):
         WEIGHTS[i] += ALPHA * difference * FEATURES[i](s, a)
-        sum += WEIGHTS[i]
+        if abs(WEIGHTS[i]) > max_w:
+            max_w = abs(WEIGHTS[i])
 
-    #my maybe futile attempt to reign in weights
-    for i in range(len(WEIGHTS)):
-        WEIGHTS[i] = WEIGHTS[i] / sum
-        if verbose:
-            print("F{}: {}, W{}: {}".format(i, FEATURES[i](s, a), i, WEIGHTS[i]))
+    # my maybe futile attempt to reign in weights
+    if max_w > 0.0:
+        for i in range(len(WEIGHTS)):
+            WEIGHTS[i] = WEIGHTS[i] / max_w
+            if verbose:
+                print("F{}: {}, W{}: {}".format(i, FEATURES[i](s, a), i, WEIGHTS[i]))
 
 def get_max_action_value(s):
     """Returns a tuple with the action, q value
     associated with the max q value for the given state.
     """
     
-    actions = OPERATORS_180
+    actions = ACTIONS
     max_action = None
     max_q = None
     for a in actions:
@@ -278,9 +305,6 @@ def get_max_action_value(s):
             max_q = q_value
             break
     return max_action, max_q
-
-def temper_constants():
-    global ALPHA, EPSILON, GAMMA
     
 
 def extract_policy(S, A):
@@ -342,10 +366,10 @@ def check_convergence(path):
 
 
 if __name__ == "__main__":
-    setup(actions=OPERATORS_180, level=LEVEL, use_exp_fn=False)
+    setup(actions=OPERATORS_180, level=LEVEL, use_exp_fn=True)
 
     #for op in ACTIONS:
     #    print(op.name)
     print(INITIAL_STATE)
 
-    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, n_repeats=10, verbose=False)
+    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, n_repeats=N_REPEATS, verbose=False)
