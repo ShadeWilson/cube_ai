@@ -65,9 +65,9 @@ Exit (499.9297874737978)
 
 The Rubik's cube itself is a generalized implementation of a collection of 3D "cubies", the individual blocks that make up a cube, which allows for simplified operators via rotational matrices.
 
-Reinforcement learning is an AI technique where agents explore a state space, earning rewards for certain behaviors along the way that they try to maximize over time. Q learning is a model-free reinforcement technique where the goal of the agent is to determine the optimal policy, or plan, to take them from the starting state to the goal state. Various parameters are used to fine time exploration vs exploitation of learning, state recall, and sparse rewards. Features were used for this particular problem due to the incredible size of the state space a Rubik's cube presents. By incorporating heuristic-like measures for various features of a state, an agent can leverage information it knows about states its been in before that have similar features. The hard part is in choosing good features that push the agent to the goal.
+Reinforcement learning is an AI technique where agents explore a state space, earning rewards for certain behaviors along the way that they try to maximize over time. Q learning is a model-free reinforcement algorithm where the goal of the agent is to determine the optimal policy, or plan, to take them from the starting state to the goal state. Various parameters are used to fine tune exploration vs exploitation of learning, state recall, and sparse rewards among others. Features were used for this particular problem due to the incredible size of the state space a Rubik's cube presents. By incorporating heuristic-like measures for various features of a state, an agent can leverage information it knows about states it's been in before that have similar features. The hard part is in choosing good features that push the agent to the goal.
 
 
-This was the final project for Introduction to Artificial Intelligence at UW.
+This was the final project for CSE 415, Introduction to Artificial Intelligence at UW.
 
 
