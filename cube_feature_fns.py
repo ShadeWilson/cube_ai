@@ -11,11 +11,13 @@ s is a state and a is the action. These features are typically binary.
 """
 from cube import *
 
+
 def f0(s, a):
     """Default function always returns 1.
     No idea if I'm supposed to do this but it seems like it.
     """
     return 1
+
 
 def f1(s, a):
     """Count number of reds on FRONT"""
@@ -25,6 +27,7 @@ def f1(s, a):
             res += 1
     return res
 
+
 def f2(s, a):
     """Count number of whites on UP"""
     res = 0
@@ -32,6 +35,7 @@ def f2(s, a):
         if c.UD_color == "W":
             res += 1
     return res
+
 
 def f3(s, a):
     """Count number of yellows on down"""
@@ -41,6 +45,7 @@ def f3(s, a):
             res += 1
     return res
 
+
 def f4(s, a):
     """Count number of oranges on BACK"""
     res = 0
@@ -48,6 +53,7 @@ def f4(s, a):
         if c.FB_color == "O":
             res += 1
     return res
+
 
 def f5(s, a):
     """Count number of greens on LEFT"""
@@ -57,6 +63,7 @@ def f5(s, a):
             res += 1
     return res
 
+
 def f6(s, a):
     """Count number of blues on RIGHT"""
     res = 0
@@ -65,6 +72,7 @@ def f6(s, a):
             res += 1
     return res
 
+
 # Following 6 functions return answ for if action is taken for first 6
 def f7(s, a):
     if a.name == "Exit":
@@ -72,11 +80,13 @@ def f7(s, a):
     sp = a.state_transf(s)
     return f1(sp, a)
 
+
 def f8(s, a):
     if a.name == "Exit":
         return s.n * s.n
     sp = a.state_transf(s)
     return f2(sp, a)
+
 
 def f9(s, a):
     if a.name == "Exit":
@@ -84,11 +94,13 @@ def f9(s, a):
     sp = a.state_transf(s)
     return f3(sp, a)
 
+
 def f10(s, a):
     if a.name == "Exit":
         return s.n * s.n
     sp = a.state_transf(s)
     return f4(sp, a)
+
 
 def f11(s, a):
     if a.name == "Exit":
@@ -96,21 +108,24 @@ def f11(s, a):
     sp = a.state_transf(s)
     return f5(sp, a)
 
+
 def f12(s, a):
     if a.name == "Exit":
         return s.n * s.n
     sp = a.state_transf(s)
     return f6(sp, a)
 
+
 def f13(s, a):
     """Next action leads to goal state"""
     if a.name == "Exit":
-        return s.n*s.n
+        return s.n * s.n
     sp = a.state_transf(s)
     if goal_test(sp) or goal_test2(sp):
-        return s.n*s.n
+        return s.n * s.n
     else:
         return 0
+
 
 def f14(s, a):
     """Red cross. Hard-coded for 3x3"""
@@ -122,7 +137,7 @@ def f14(s, a):
         (0, min_coord, min_coord), (0, max_coord, min_coord),
         # L/R
         (min_coord, 0, min_coord), (max_coord, 0, min_coord),
-        (0, 0, min_coord) # center
+        (0, 0, min_coord)  # center
     ]
 
     for c in s.front:
@@ -131,6 +146,7 @@ def f14(s, a):
             return 0
     print(s)
     return 1
+
 
 def f15(s, a):
     """First layer solved. Considering red as base"""
@@ -157,6 +173,7 @@ def f15(s, a):
 
     return s.n * s.n
 
+
 def f16(s, a):
     """First layer solved after action. Considering red as base"""
     # red must be solved
@@ -164,7 +181,6 @@ def f16(s, a):
         return s.n * s.n
     sp = a.state_transf(s)
     return f15(sp, a)
-
 
 
 FEATURES_2x2 = [

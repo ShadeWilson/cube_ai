@@ -10,23 +10,20 @@ CSE 415
 import random
 
 N = 2  # Use default, but override if new value supplied
-             # by the user on the command line.
 try:
-  import sys
-  arg1 = sys.argv[1]
-  N = int(arg1)
-  print("N = "+arg1)
-except:
-  pass
+    import sys
+    arg1 = sys.argv[1]
+    N = int(arg1)
+    print("N = " + arg1)
 
 
 class Cubie:
     """ Represents a single cubie (ie block) in a Rubik's cube.
 
     Contains coordinates as well as face colors and their orientations.
-    The coordinate system is defined as the FRONT of the cube (RED) making up the 
-    XY plane with the X axis to the left and right and the Y axis up and down. 
-    The Z axis spans behind the front of the cube.
+    The coordinate system is defined as the FRONT of the cube (RED) making up
+    the XY plane with the X axis to the left and right and the Y axis up
+    and down. The Z axis spans behind the front of the cube.
 
     3-D coordinates stored as (x, y, z)
 
@@ -35,6 +32,7 @@ class Cubie:
     - UD_color: upper/down color, the color of the XZ plane (top/bottom)
     - LR_color: left/right color, the color of the YZ plane
     """
+
     def __init__(self, x, y, z, FB_color, UD_color, LR_color):
         self.x = x
         self.y = y
@@ -44,20 +42,26 @@ class Cubie:
         self.LR_color = LR_color
 
     def __eq__(self, s2):
-        if self.x != s2.x: return False
-        elif self.y != s2.y: return False
-        elif self.z != s2.z: return False
+        if self.x != s2.x:
+            return False
+        elif self.y != s2.y:
+            return False
+        elif self.z != s2.z:
+            return False
         else:
-            return self.FB_color == s2.FB_color and self.UD_color == s2.UD_color and self.LR_color == s2.LR_color
+            return self.FB_color == s2.FB_color and \
+                self.UD_color == s2.UD_color and \
+                self.LR_color == s2.LR_color
 
     # these two methods are just for sorting before checking equality
     # so i dont do mad. This is weird but seems to work
     def __lt__(self, s2):
-        return self.x * 100 + self.y * 10 + self.z < s2.x * 100 + s2.y * 10 + s2.z
+        return self.x * 100 + self.y * 10 + self.z < s2.x * 100 \
+            + s2.y * 10 + s2.z
 
     def __le__(self, s2):
-        return self.x * 100 + self.y * 10 + self.z <= s2.x * 100 + s2.y * 10 + s2.z
-
+        return self.x * 100 + self.y * 10 + self.z <= s2.x * 100 \
+            + s2.y * 10 + s2.z
 
     def __str__(self):
         return "{}, {}, {} [{} {} {}]".format(
@@ -69,8 +73,9 @@ class Cubie:
 
     def copy(self):
         new_cubie = Cubie(x=self.x, y=self.y, z=self.z,
-            FB_color=self.FB_color, UD_color=self.UD_color, LR_color=self.LR_color)
-        
+                          FB_color=self.FB_color, UD_color=self.UD_color,
+                          LR_color=self.LR_color)
+
         return new_cubie
 
     def rotate(self, dir, clockwise=True):
@@ -79,16 +84,17 @@ class Cubie:
         to 90 degrees, which simplifies the matrices a lot, allowing
         me to "collapse" them and instead of performing matrix algebra,
         I can simply swap x, y, and/or z value as needed.
-        
+
         - dir: direction, in cube lingo. Accepted directions are
         B, F, L, R, U, and D. Each stand for rotating a particular face
-        90 degrees. This translates to rotation along a particular axis 
+        90 degrees. This translates to rotation along a particular axis
         depending on the direction. Ex: F (front) represents a rotation of
         the XY plane about the Z axis. NOTE: this assumes that the user knows
-        what they are doing when rotating and does not rotate a cube on the back face
-        when the front is rotated...
+        what they are doing when rotating and does not rotate a cube on the
+        back face when the front is rotated...
 
-        - clockwise: True for a clockwise rotation, False for a counterclockwise rotation
+        - clockwise: True for a clockwise rotation,
+            False for a counterclockwise rotation
 
         Returns a new cubie rotated from this.
         """
@@ -121,12 +127,13 @@ class Cubie:
             new.UD_color = self.LR_color
             new.LR_color = self.UD_color
         else:
-            raise ValueError("{} is not a valid rotation axis.".format(rotation_axis))
+            raise ValueError(
+                "{} is not a valid rotation axis.".format(rotation_axis))
 
         return new
 
     def is_outside_cube(self, coordinate_range):
-        """ Given a range of Cube coordinates, 
+        """ Given a range of Cube coordinates,
         returns true iff the cubie itself is on the outside of the cube.
         Ie, the cubie would be visible (and thus matters)
 
@@ -136,9 +143,6 @@ class Cubie:
         edges = [min_coord, max_coord]
 
         return self.x in edges or self.y in edges or self.z in edges
-
-
-
 
 
 class State:
@@ -158,7 +162,6 @@ class State:
         self.down = []
         self.left = []
         self.right = []
-        #self.color_dict = {0: "W", 1: "B", 2: "R", 3: "G", 4: "O", 5: "Y"}
 
         # max coordinate is the farthest distance from the origin
         # a cubie may be found. Coordinates are 1 unit away from each other,
@@ -177,7 +180,8 @@ class State:
             for x in self.coordinate_range:
                 for y in self.coordinate_range:
                     for z in self.coordinate_range:
-                        FB_color, UD_color, LR_color = self._side_color(x, y, z)
+                        FB_color, UD_color, LR_color = self._side_color(
+                            x, y, z)
                         cubie = Cubie(x, y, z, FB_color, UD_color, LR_color)
                         if cubie.is_outside_cube(self.coordinate_range):
                             self.cube.append(cubie)
@@ -187,8 +191,7 @@ class State:
 
     def _side_color(self, x, y, z):
         """Given an x, y, and z coord,
-        return a tuple of 
-        (FB_color, UD_color, LR_color). 
+        return a tuple of (FB_color, UD_color, LR_color).
         One or more may be None if the cubie is not
         visible from that direction."""
         FB_color = None
@@ -213,7 +216,7 @@ class State:
         elif z == max_coord:
             FB_color = "O"
 
-        return (FB_color, UD_color, LR_color) 
+        return (FB_color, UD_color, LR_color)
 
     def _add_to_face(self, cubie):
         """Add cubie to the proper faces."""
@@ -252,9 +255,9 @@ class State:
 
         for i in range(len(self.cube)):
             if self.cube[i] != s2.cube[i]:
-                #print("__eq__")
-                #print(self.cube[i])
-                #print(s2.cube[i])
+                # print("__eq__")
+                # print(self.cube[i])
+                # print(s2.cube[i])
                 return False
         return True
 
@@ -290,19 +293,19 @@ class State:
         self.right.sort()
         for c in self.front:
             res += "{}".format(c.FB_color)
-        res +="\nBack:  "
+        res += "\nBack:  "
         for c in self.back:
             res += "{}".format(c.FB_color)
-        res +="\nUp:    "
+        res += "\nUp:    "
         for c in self.up:
             res += "{}".format(c.UD_color)
-        res +="\nDown:  "
+        res += "\nDown:  "
         for c in self.down:
             res += "{}".format(c.UD_color)
-        res +="\nLeft:  "
+        res += "\nLeft:  "
         for c in self.left:
             res += "{}".format(c.LR_color)
-        res +="\nRight: "
+        res += "\nRight: "
         for c in self.right:
             res += "{}".format(c.LR_color)
 
@@ -348,6 +351,7 @@ class State:
             new_cube._add_to_face(cubie)
 
         return new_cube
+
     def move_180(self, dir):
         new = self.move(dir=dir)
         new = new.move(dir=dir)
@@ -372,15 +376,17 @@ class State:
         return cube
 
 
-
 """ GLOBAL FUNCTIONS """
+
 
 def make_goal_state():
     global GOAL_STATE, N
     GOAL_STATE = State(n=N)
-    #print("GOAL_STATE="+str(GOAL_STATE))
+    # print("GOAL_STATE="+str(GOAL_STATE))
+
 
 make_goal_state()
+
 
 def rotate_whole_cube(s, dir):
     rotated = []
@@ -389,20 +395,21 @@ def rotate_whole_cube(s, dir):
     new = State(n=s.n, cube=rotated)
     return new
 
+
 def goal_test(s):
     goal = State(n=s.n)
     if s == goal:
         return True
     else:
         new = s.copy()
-        for _ in range(3): # rotate around Z 4 times
+        for _ in range(3):  # rotate around Z 4 times
             rotated = rotate_whole_cube(new, dir="F")
             if rotated == goal:
                 return True
             else:
                 new = rotated
         new = s.copy()
-        for _ in range(3): # rotate around Z 4 times
+        for _ in range(3):  # rotate around Z 4 times
             rotated = rotate_whole_cube(new, dir="L")
             if rotated == goal:
                 return True
@@ -418,15 +425,20 @@ def goal_test2(s):
     for side in sides:
         res = 0
         for c in side:
-            if c.FB_color == "R": res += 1
-        if res == s.n * s.n: return True
+            if c.FB_color == "R":
+                res += 1
+        if res == s.n * s.n:
+            return True
     return False
+
 
 def goal_message(s):
     global N
     return "You've solved the {}x{} Rubik's cube!".format(N, N)
 
+
 """ OPERATORS """
+
 
 class Operator:
     def __init__(self, name, precond, state_transf):
@@ -471,6 +483,7 @@ def CREATE_INITIAL_STATE(level=0):
         cube = cube.scramble(n_moves=50)
     return cube
 
+
 directions = ["F", "B", "U", "D", "L", "R"]
 clockwise_opts = [True, False]
 opts = []
@@ -479,88 +492,23 @@ for dir in directions:
         opts.append((dir, opt))
 
 OPERATORS = [Operator("Rotate " + str(dir) + " (clockwise=" + str(opt) + ")",
-                      lambda s,dir1=dir: s.can_move(dir1),
-                      lambda s,dir1=dir, opt1=opt: s.move(dir1, opt1) )
+                      lambda s, dir1=dir: s.can_move(dir1),
+                      lambda s, dir1=dir, opt1=opt: s.move(dir1, opt1))
              for dir, opt in opts]
 
 OPERATORS_180 = [Operator("Rotate 180'" + str(dir),
-                      lambda s,dir1=dir: s.can_move(dir1),
-                      lambda s,dir1=dir: s.move_180(dir1) )
-             for dir in directions]
+                          lambda s, dir1=dir: s.can_move(dir1),
+                          lambda s, dir1=dir: s.move_180(dir1))
+                 for dir in directions]
 
-#<GOAL_TEST> (optional)
-GOAL_TEST = lambda s: goal_test(s)
-#</GOAL_TEST>
-
-#<GOAL_MESSAGE_FUNCTION> (optional)
-GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
-#</GOAL_MESSAGE_FUNCTION>
+# <GOAL_TEST> (optional)
 
 
-if __name__ == "__main__":
-    
-    
-    c1 = State(n=2)
-    print("Max coord: {}\nRange: {}".format(c1.max_coord, c1.coordinate_range))
-    #print(c1)
+def GOAL_TEST(s): return goal_test(s)
+# </GOAL_TEST>
 
-    c2 = c1.copy()
-    print("Copy test: {}".format(c1 == c2))
-    """
-    c3 = c2.move(dir="F")
-    #print("Copy test 2: {}".format(c2 == c3))
-    
+# <GOAL_MESSAGE_FUNCTION> (optional)
 
-    print("***************")
-    cube = Cube(n=2)
-    print(cube)
 
-    dir = "F"
-    rotated = cube.move(dir=dir)
-    print("{} {}".format(dir, rotated == cube))
-    #print("***Rotated\n")
-    #print(rotated)
-
-    rotated_back = rotated.move(dir=dir, clockwise=False)
-    print("{}' {}".format(dir, cube == rotated_back))
-    print(rotated_back)
-
-    # rotate 4 times
-    copy = cube.move(dir=dir)
-    copy = copy.move(dir=dir)
-    copy = copy.move(dir=dir)
-    copy_360 = copy.move(dir=dir)
-    print("360': {}".format(copy_360 == cube))
-
-    # trickier: 180' U and 180' down should leave us in same position
-    # this doesn't work bc they are mirrors of each other and im going off exact coords
-    u_180 = cube.move(dir="U")
-    u_180 = u_180.move(dir="U")
-    d_180 = cube.move(dir="D")
-    d_180 = d_180.move(dir="D")
-    print("U180 == D180: {}".format(u_180 == d_180))
-
-    
-    c2.cube[0] = Cubie(-1, 0, -1, "R", "W", "B")
-    print("After change: {}".format(c1 == c2))
-
-    cubie = Cubie(-1, -1, -1, "R", "W", "B")
-    print(cubie)
-
-    cubie2 = cubie.rotate(dir="U")
-    print(cubie2 == cubie)
-    print(cubie2)
-
-    cubie3 = cubie2.rotate(dir="U", clockwise=False)
-    print(cubie3 == cubie)
-    print(cubie3)
-    """
-    
-    cube = State(n=N)
-    print(cube)
-
-    #for op in OPERATORS:
-    #   print(op.name)
-    #    new_state = op.state_transf(cube)
-    #    print(new_state)
-    print(cube.scramble(n_moves=100))
+def GOAL_MESSAGE_FUNCTION(s): return goal_message(s)
+# </GOAL_MESSAGE_FUNCTION>

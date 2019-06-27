@@ -8,7 +8,6 @@ among other things.
 """
 
 from cube import *
-import cube
 
 from cube_feature_fns import *
 
@@ -27,7 +26,8 @@ except:
 print("{} transitions, {} repeats".format(N_TRANS, N_REPEATS))
 print("Level: {}".format(LEVEL))
 
-ACTIONS=None; Q_VALUES=None
+ACTIONS = None
+Q_VALUES = None
 Terminal_state = -1
 USE_EXPLORATION_FUNCTION = None
 INITIAL_STATE = None
@@ -44,6 +44,7 @@ ALPHA = None
 EPSILON = None
 GAMMA = None
 
+
 def adjust_params(reset=False, use_exp_fn=False):
     """Decrease parameters using some function over time.
     """
@@ -57,6 +58,7 @@ def adjust_params(reset=False, use_exp_fn=False):
     if use_exp_fn:
         ALPHA = ALPHA / 2
         EPSILON = EPSILON / 2
+
 
 def setup(actions, level=0, use_exp_fn=False):
     """ Basic setting up of global vars"""
@@ -73,14 +75,12 @@ def setup(actions, level=0, use_exp_fn=False):
 
     # initalize feature weights to 0
     WEIGHTS = [0 for i in range(len(FEATURES))]
-    
+
     adjust_params(reset=True, use_exp_fn=USE_EXPLORATION_FUNCTION)
 
 
-
-
-
-def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, verbose=False):
+def q_learning_driver(initial_state, n_transitions, n_repeats,
+                      end_early=False, verbose=False):
     """Drives the q learning process from the initial state.
     Runs n_transitions number of transitions aka agent turns,
     updating Q values each time.
@@ -105,30 +105,24 @@ def q_learning_driver(initial_state, n_transitions, n_repeats, end_early=False, 
                 else:
                     s = initial_state
                     a = choose_action(s, verbose=verbose)
-            else:
-                if not verbose and i % 100 == 99: 
-                    #print(".", end='')
-                    pass
-                pass
 
         for i in range(len(WEIGHTS)):
             print("w{}: {}".format(i, WEIGHTS[i]))
 
-    
     path = solution_path()
 
     if n_repeats > 0:
         # havent converged, try try again
         print("Iterating {} more times with {} trainings each.".format(n_repeats, n_transitions))
         adjust_params(reset=False, use_exp_fn=USE_EXPLORATION_FUNCTION)
-        q_learning_driver(initial_state, n_transitions, n_repeats - 1, end_early, verbose)
+        q_learning_driver(initial_state, n_transitions, n_repeats - 1,
+                          end_early, verbose)
     elif check_convergence(path):
         print("Converged!")
         print("Path:")
         print_solution_path(path)
     elif n_repeats == 0:
         print("Did not converge before ran out of repeats.")
-
 
 
 def choose_action(s, verbose=False):
@@ -146,13 +140,13 @@ def choose_action(s, verbose=False):
         if verbose:
             print("Goal state reached. Returning exit action.")
         return EXIT_ACTION
-    
+
     r = random.uniform(0, 1)
-    if r <= EPSILON: # if we haven't seen the state, choose rand
+    if r <= EPSILON:  # if we haven't seen the state, choose rand
         rand_a = random.randint(0, len(ACTIONS) - 1)
         a = ACTIONS[rand_a]
         if verbose:
-            print("Selecting random action! {}, ep: {}".format(a.name, EPSILON))
+            print("Selecting random action {}, ep: {}".format(a.name, EPSILON))
 
     else:
         a, q = get_max_action_value(s)
@@ -162,33 +156,36 @@ def choose_action(s, verbose=False):
     return a
 
 
+NGOALS = 1
 
-NGOALS=1 # EDIT THIS LATER MAYBE?
+
 def R(s, a, sp):
     """ REWARD FUNCTION:
     - 100 for completing the cube.
     - other rewards??
     """
-    # Handle goal state transitions first...    
+    # Handle goal state transitions first...
     if goal_test(s):
-        if a.name == "Exit": 
-            #print("WIN")
+        if a.name == "Exit":
             return 100.0
-        else: return 0.0
+        else:
+            return 0.0
     elif goal_test2(s):
         return 10.0
     # Handle all other transitions:
     return LIVING_REWARD
 
+
 def transition_handler(s, a, verbose=False):
     """Given a state s and an action a,
-    handle the body of the looping q learning. 
+    handle the body of the looping q learning.
 
     - Apply a to s -> sp, get R and a new action, ap
     - Record Q value and difference between sample and old estimate
     - Update weights
 
-    Returns sp and ap to be used as the new state and action for the following iteration
+    Returns sp and ap to be used as the new state and
+    action for the following iteration
     """
     sp = a.state_transf(s)
     ap = choose_action(sp, verbose=verbose)
@@ -202,29 +199,30 @@ def transition_handler(s, a, verbose=False):
 
     return sp, ap
 
+
 def compute_q_value(s, a):
     """Compute Q values, specific to feature-based Q learning.
 
     If we've visited a state and performed an action before,
-    return the actual Q value. Otherwise, compute the 
+    return the actual Q value. Otherwise, compute the
     approximate q value based on the features.
     """
     global Q_VALUES
 
     if s in Q_VALUES and a in Q_VALUES[s]:
-        #print("Seen this (s, a) pair: {}".format(Q_VALUES[s][a]))
         return Q_VALUES[s][a]
 
     res = 0.0
     for i in range(len(WEIGHTS)):
         res += WEIGHTS[i] * FEATURES[i](s, a)
 
-    if not s in Q_VALUES:
+    if s not in Q_VALUES:
         Q_VALUES[s] = {}
-    
+
     Q_VALUES[s][a] = res
 
     return res
+
 
 def update_q_values(s, a, sp):
     """Call this function whenever s has transitioned to another
@@ -245,17 +243,6 @@ def update_q_values(s, a, sp):
     """
     global Q_VALUES
 
-    #if not sp in Q_VALUES:
-    #    Q_VALUES[sp] = {}
-    #    Q_VALUES[sp][a] = 0.0
-
-    # need to be cautious:
-    # make sure 1) we've seen state s and 2) we've done action on s... 
-    #if not s in Q_VALUES:
-    #    Q_VALUES[s] = {}
-    #if not a in Q_VALUES[s]:
-    #    Q_VALUES[s][a] = 0.0
-
     ap = choose_action(sp)
     Q_sp_a = compute_q_value(sp, ap)
 
@@ -266,8 +253,9 @@ def update_q_values(s, a, sp):
 
     return sample - Q_s_a
 
+
 def update_weights(s, a, difference, verbose):
-    """Update the feature weights. 
+    """Update the feature weights.
 
     Edits WEIGHTS. Returns None.
     """
@@ -287,11 +275,12 @@ def update_weights(s, a, difference, verbose):
             if verbose:
                 print("F{}: {}, W{}: {}".format(i, FEATURES[i](s, a), i, WEIGHTS[i]))
 
+
 def get_max_action_value(s):
     """Returns a tuple with the action, q value
     associated with the max q value for the given state.
     """
-    
+
     actions = ACTIONS
     max_action = None
     max_q = None
@@ -305,12 +294,12 @@ def get_max_action_value(s):
             max_q = q_value
             break
     return max_action, max_q
-    
+
 
 def extract_policy(S, A):
     """Return a dictionary mapping states to actions. Obtain the policy
     using the q-values most recently computed.
-    Ties between actions having the same (s, a) value can be broken arbitrarily.
+    Ties b/w actions having the same (s, a) value can be broken arbitrarily.
     Reminder: goal states should map to the Exit action, and no other states
     should map to the Exit action.
 
@@ -318,8 +307,9 @@ def extract_policy(S, A):
     """
     global Policy
     Policy = {}
-    
+
     return Policy
+
 
 def solution_path():
     s = INITIAL_STATE
@@ -327,27 +317,22 @@ def solution_path():
 
     # tuple with state, action, q value
     path = []
-    #print("Inital state:")
-    #print(s)
     while i < 100:
         a, q = get_max_action_value(s)
-        #print("{} ({})".format(a.name, q))
         path.append((s, a, q))
         s = a.state_transf(s)
-        #print(s)
         i += 1
 
         if goal_test(s):
             q = compute_q_value(s, EXIT_ACTION)
             path.append((s, EXIT_ACTION, q))
-            #print("{} ({})".format(EXIT_ACTION.name, q))
-            #print("Policy recommends the goal. Congrats!")
             break
-    
+
     return path
 
+
 def print_solution_path(path):
-    """Print solution path. 
+    """Print solution path.
     path is tuple of the form (s, a, q)"""
     step = 0
     for s, a, q in path:
@@ -361,15 +346,12 @@ def print_solution_path(path):
 
 def check_convergence(path):
     s, a, q = path[-1]
-    #print("Check converge {} == 'Exit': {}".format(a.name, a.name == "Exit"))
     return a.name == "Exit"
 
 
 if __name__ == "__main__":
     setup(actions=OPERATORS_180, level=LEVEL, use_exp_fn=True)
-
-    #for op in ACTIONS:
-    #    print(op.name)
     print(INITIAL_STATE)
 
-    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS, n_repeats=N_REPEATS, verbose=False)
+    q_learning_driver(INITIAL_STATE, n_transitions=N_TRANS,
+                      n_repeats=N_REPEATS, verbose=False)
