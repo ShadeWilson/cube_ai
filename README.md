@@ -1,0 +1,65 @@
+# Rubik's Cube AI: Feature-Based Reinforcement Learning
+
+### Usage
+
+```shell
+python Q_Learn.py [N] [n_transitions] [n_repeats] [level (0 - 3)]
+
+# N: size of the cube. 2 for 2x2, 3 for 3x3, etc
+# n_transitions: the number of transitions to run per repeat
+# n_repeats: the number of times to redo n transitions. For exploiting learning
+# level: 0 - 3, the puzzle level of difficulty where 0 is one turn from a solution and 3 is fully scrambled
+
+# example with solution path:
+python Q_Learn.py 2 1000 5 3
+
+Path:
+Initial state:
+Front: RRRR
+Back:  OOOO
+Up:    WYYW
+Down:  WYYW
+Left:  BGGB
+Right: BGGB
+
+Rotate 180'F (207.79536960389967)
+Initial state:
+Front: RRRR
+Back:  OOOO
+Up:    YYWW
+Down:  YYWW
+Left:  GGBB
+Right: GGBB
+
+Rotate 180'U (256.07980517585605)
+Initial state:
+Front: RORO
+Back:  OROR
+Up:    WWYY
+Down:  YYWW
+Left:  GGBB
+Right: GGBB
+
+Rotate 180'R (314.3972324934149)
+Initial state:
+Front: RORO
+Back:  OROR
+Up:    WWWW
+Down:  YYYY
+Left:  GGBB
+Right: BBGG
+
+Rotate 180'U (399.8293013904836)
+Initial state:
+Front: RRRR
+Back:  OOOO
+Up:    WWWW
+Down:  YYYY
+Left:  GGGG
+Right: BBBB
+
+Exit (499.9297874737978)
+
+
+
+```
