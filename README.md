@@ -10,7 +10,7 @@ python Q_Learn.py [N] [n_transitions] [n_repeats] [level (0 - 3)]
 # n_repeats: the number of times to redo n transitions. For exploiting learning
 # level: 0 - 3, the puzzle level of difficulty where 0 is one turn from a solution and 3 is fully scrambled
 
-# example with solution path:
+# example scrambled 2x2 with solution path and Q values:
 python Q_Learn.py 2 1000 5 3
 
 Path:
@@ -59,7 +59,15 @@ Left:  GGGG
 Right: BBBB
 
 Exit (499.9297874737978)
-
-
-
 ```
+
+### About
+
+The Rubik's cube itself is a generalized implementation of a collection of 3D "cubies", the individual blocks that make up a cube, which allows for simplified operators via rotational matrices.
+
+Reinforcement learning is an AI technique where agents explore a state space, earning rewards for certain behaviors along the way that they try to maximize over time. Q learning is a model-free reinforcement technique where the goal of the agent is to determine the optimal policy, or plan, to take them from the starting state to the goal state. Various parameters are used to fine time exploration vs exploitation of learning, state recall, and sparse rewards. Features were used for this particular problem due to the incredible size of the state space a Rubik's cube presents. By incorporating heuristic-like measures for various features of a state, an agent can leverage information it knows about states its been in before that have similar features. The hard part is in choosing good features that push the agent to the goal.
+
+
+This was the final project for Introduction to Artificial Intelligence at UW.
+
+
